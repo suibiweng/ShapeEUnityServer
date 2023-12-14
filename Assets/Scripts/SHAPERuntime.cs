@@ -6,13 +6,16 @@ using UnityEngine.Networking;
 using System.Linq;
 using UnityEngine;
 using System.Text;
+using UnityEngine.UI;
+using UnityEditor;
 
 public class SHAPERuntime : MonoBehaviour
 {
+    public InputField inputPrompt;
     public string prompt;
     public int steps =64;//(8~64)
     public int cfg= 20;//(1~20)
-    private string directoryPath;
+    public string directoryPath;
     private string modelName;
 
 
@@ -24,18 +27,46 @@ public class SHAPERuntime : MonoBehaviour
             OBJ,
             GLTF
         };
-    public static Format format = Format.FBX;
+    public  Format format = Format.OBJ;
 
     private bool postFlag = false;
     private int postProgress = 0;
 
      string textToMeshID = "6epa33dzxxx7c3";
     public string invoice;
+
+    public string modelID;
+
+    public string UserID;
     // Start is called before the first frame update
     void Start()
     {
-        // StartCoroutine(Verify($"https://{textToMeshID}-5000.proxy.runpod.net/verify", "{\"invoice\":\"" + invoice + "\"}"));
+        StartCoroutine(Verify($"https://{textToMeshID}-5000.proxy.runpod.net/verify", "{\"invoice\":\"" + invoice + "\"}"));
         // StartCoroutine(Post($"https://{textToMeshID}-5000.proxy.runpod.net/data", "{\"prompt\":\"" + $"{prompt}" + "\",\"steps\":\"" + $"{steps}" + "\",\"cfg\":\"" + $"{cfg}" + "\",\"invoice\":\"" + $"{invoice}" + "\",\"fileFormat\":\"" + $"{format}" + "\"}"));
+    }
+
+
+    public void sendPrompt(string userID,string prompts,string modelid){
+
+        
+        modelID=modelid;
+        UserID=userID;
+
+        StartCoroutine(Post($"https://{textToMeshID}-5000.proxy.runpod.net/data", "{\"prompt\":\"" + $"{prompts}" + "\",\"steps\":\"" + $"{steps}" + "\",\"cfg\":\"" + $"{cfg}" + "\",\"invoice\":\"" + $"{invoice}" + "\",\"fileFormat\":\"" + $"{format}" + "\"}"));
+
+    }
+
+
+    public void Debugsending(){
+
+        prompt=inputPrompt.text;
+
+
+        sendPrompt("12",prompt,"XXX");
+
+
+
+
     }
 
     // Update is called once per frame
@@ -68,13 +99,17 @@ public class SHAPERuntime : MonoBehaviour
                     Debug.Log("It seems that you may have reached the limit. To check your character usage, please click on the Status button. Please wait until the 1st of the next month to get a renewed character count. Thank you for using Shap-E for Unity.");
                 else
                 {
+                    modelName=UserID+"_"+prompt.Trim()+"_"+modelID;
                     byte[] modelData = Convert.FromBase64String(request.downloadHandler.text);
-                    File.WriteAllBytes($"Assets/Shap-E/Models/{modelName}.{format}", modelData);
-                   // Debug.Log($"<color=green>Inference Successful: </color>Please find the model in the {directoryPath}");
-                    // AssetDatabase.Refresh();
-                   // Selection.activeObject = (UnityEngine.Object)AssetDatabase.LoadAssetAtPath($"Assets/Shap-E/Models/{modelName}.{format}", typeof(UnityEngine.Object));
+                    File.WriteAllBytes($"{directoryPath}{modelName}.{format}", modelData);
+                    Debug.Log($"<color=green>Inference Successful: </color>Please find the model in the {directoryPath}");
+                   
+                    this.BroadcastMessage("Done");
+                   // AssetDatabase.Refresh();
+                  //  Selection.activeObject = (UnityEngine.Object)AssetDatabase.LoadAssetAtPath($"Assets/Shap-E/Models/{modelName}.{format}", typeof(UnityEngine.Object));
                 }
             }
+
 
             request.Dispose();
         }
