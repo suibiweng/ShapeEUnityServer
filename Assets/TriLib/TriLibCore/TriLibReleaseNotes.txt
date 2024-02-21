@@ -1,0 +1,4 @@
+﻿2.2.2
+Changelog:
+-Fixed glTF embedded textures issue.
+-Fixed vertex merging slowdown.

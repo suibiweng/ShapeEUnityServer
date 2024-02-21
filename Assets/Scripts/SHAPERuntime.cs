@@ -18,6 +18,8 @@ public class SHAPERuntime : MonoBehaviour
     public string directoryPath;
     private string modelName;
 
+    public ModelDownloader modelDownloader;
+
 
     public enum Format
         {
@@ -32,7 +34,7 @@ public class SHAPERuntime : MonoBehaviour
     private bool postFlag = false;
     private int postProgress = 0;
 
-     string textToMeshID = "6epa33dzxxx7c3";
+     string textToMeshID = "nejnwmcwvhcax9";
     public string invoice;
 
     public string modelID;
@@ -41,6 +43,7 @@ public class SHAPERuntime : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        //StartCoroutine(Verify($"https://{textToMeshID}-5000.proxy.runpod.net/verify", "{\"invoice\":\"" + invoice + "\"}"));
         StartCoroutine(Verify($"https://{textToMeshID}-5000.proxy.runpod.net/verify", "{\"invoice\":\"" + invoice + "\"}"));
         // StartCoroutine(Post($"https://{textToMeshID}-5000.proxy.runpod.net/data", "{\"prompt\":\"" + $"{prompt}" + "\",\"steps\":\"" + $"{steps}" + "\",\"cfg\":\"" + $"{cfg}" + "\",\"invoice\":\"" + $"{invoice}" + "\",\"fileFormat\":\"" + $"{format}" + "\"}"));
     }
@@ -52,8 +55,8 @@ public class SHAPERuntime : MonoBehaviour
         modelID=modelid;
         UserID=userID;
 
-        StartCoroutine(Post($"https://{textToMeshID}-5000.proxy.runpod.net/data", "{\"prompt\":\"" + $"{prompts}" + "\",\"steps\":\"" + $"{steps}" + "\",\"cfg\":\"" + $"{cfg}" + "\",\"invoice\":\"" + $"{invoice}" + "\",\"fileFormat\":\"" + $"{format}" + "\"}"));
-
+       if(modelDownloader==null) StartCoroutine(Post($"https://{textToMeshID}-5000.proxy.runpod.net/data", "{\"prompt\":\"" + $"{prompts}" + "\",\"steps\":\"" + $"{steps}" + "\",\"cfg\":\"" + $"{cfg}" + "\",\"invoice\":\"" + $"{invoice}" + "\",\"fileFormat\":\"" + $"{format}" + "\"}"));
+        else PostToTriLib($"https://{textToMeshID}-5000.proxy.runpod.net/data", "{\"prompt\":\"" + $"{prompts}" + "\",\"steps\":\"" + $"{steps}" + "\",\"cfg\":\"" + $"{cfg}" + "\",\"invoice\":\"" + $"{invoice}" + "\",\"fileFormat\":\"" + $"{format}" + "\"}");
     }
 
 
@@ -75,6 +78,27 @@ public class SHAPERuntime : MonoBehaviour
         
     }
 
+    public void PostToTriLib(string url, string bodyJsonString){
+
+            var request = new UnityWebRequest(url, "POST");
+            byte[] bodyRaw = Encoding.UTF8.GetBytes(bodyJsonString);
+            request.uploadHandler = (UploadHandler)new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = (DownloadHandler)new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            if(modelDownloader!=null){
+
+                        modelDownloader.LoadModelwebRequest(request);
+            }
+
+
+
+
+    }
+
+
+
+
 
             IEnumerator Post(string url, string bodyJsonString)
         {
@@ -83,6 +107,7 @@ public class SHAPERuntime : MonoBehaviour
             request.uploadHandler = (UploadHandler)new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = (DownloadHandler)new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
+            
             yield return request.SendWebRequest();
             postProgress = 1;
             postFlag = false;
@@ -99,7 +124,11 @@ public class SHAPERuntime : MonoBehaviour
                     Debug.Log("It seems that you may have reached the limit. To check your character usage, please click on the Status button. Please wait until the 1st of the next month to get a renewed character count. Thank you for using Shap-E for Unity.");
                 else
                 {
-                    modelName=UserID+"_"+prompt.Trim()+"_"+modelID;
+
+
+
+
+                    modelName=modelID;
                     byte[] modelData = Convert.FromBase64String(request.downloadHandler.text);
                     File.WriteAllBytes($"{directoryPath}{modelName}.{format}", modelData);
                     Debug.Log($"<color=green>Inference Successful: </color>Please find the model in the {directoryPath}");
@@ -114,7 +143,7 @@ public class SHAPERuntime : MonoBehaviour
             request.Dispose();
         }
 
-    IEnumerator Verify(string url, string bodyJsonString)
+        IEnumerator Verify(string url, string bodyJsonString)
         {
             var request = new UnityWebRequest(url, "POST");
             byte[] bodyRaw = Encoding.UTF8.GetBytes(bodyJsonString);

@@ -18,7 +18,7 @@ namespace AiKodexShapE
     public class ShapEditor : EditorWindow
     {
         string prompt = "";
-        string textToMeshID = "6epa33dzxxx7c3";
+        string textToMeshID = "nejnwmcwvhcax9";
         string imageToMeshID = "UnderDevelopment";
         Texture2D fromImage;
         int steps = 64;
